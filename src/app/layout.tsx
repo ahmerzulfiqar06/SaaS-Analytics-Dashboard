@@ -24,10 +24,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased` }>
+        <div className="min-h-dvh">
+          <header className="border-b border-gray-900/50 bg-black/20 backdrop-blur supports-[backdrop-filter]:bg-black/10">
+            <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+              <a href="/" className="font-medium">SaaS Analytics</a>
+              <nav className="hidden sm:flex gap-4 text-sm text-gray-300">
+                <a className="hover:text-white" href="/charts">Charts</a>
+                <a className="hover:text-white" href="/dashboards">Dashboards</a>
+                <a className="hover:text-white" href="/segments">Segments</a>
+                <a className="hover:text-white" href="/reports">Reports</a>
+              </nav>
+            </div>
+          </header>
+          <div className="max-w-6xl mx-auto">{children}</div>
+          <footer className="border-t border-gray-900/50 text-xs text-gray-500 py-6 mt-10 px-6">
+            <div className="max-w-6xl mx-auto">© {new Date().getFullYear()} SaaS Analytics</div>
+          </footer>
+        </div>
       </body>
     </html>
   );
