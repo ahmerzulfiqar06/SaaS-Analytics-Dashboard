@@ -55,6 +55,12 @@ POST `/api/query` returns `{ series[], totals, table[] }` from query JSON.
 - POST `/api/reports/send` with `{ reportId }` generates a PDF and emails recipients.
 - Configure Vercel Cron to call `/api/reports/cron`.
 
+### Quick Links (Deployed)
+- Query Builder: `/charts/new`
+- Charts List: `/charts`
+- Demo Data: `/debug/generate`
+- Dashboards: `/dashboards` → create, then add charts
+
 ### Deployment
 - DB on Railway/Supabase/Neon.
 - Deploy app on Vercel. Set env vars: `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`.
