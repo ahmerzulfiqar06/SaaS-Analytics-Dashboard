@@ -113,7 +113,14 @@ export async function runQuery(input: QueryInput) {
 
   const totals = series.reduce((acc, p) => acc + p.value, 0);
 
-  return { series, totals, table: rows };
+  // Normalize table rows to be JSON-serializable (no BigInt)
+  const table = rows.map((r) => ({
+    bucket: new Date(r.bucket).toISOString(),
+    group: r.group_value ?? null,
+    value: Number(r.v) || 0,
+  }));
+
+  return { series, totals, table };
 }
 
 
