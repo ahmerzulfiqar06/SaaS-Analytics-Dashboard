@@ -1,0 +1,260 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================
+// NextAuth models (mapped)
+// ==========================
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String?   @unique
+  emailVerified  DateTime?
+  image          String?
+  sessions       Session[]
+  accounts       Account[]
+
+  members        Member[]
+
+  @@map("auth_users")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("auth_sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@id([identifier, token])
+  @@map("auth_verification_tokens")
+}
+
+// Optional: OAuth accounts (not used for Email provider, but defined for completeness)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("auth_accounts")
+}
+
+// ==========================
+// Domain models
+// ==========================
+
+model Workspace {
+  id         String     @id @default(cuid())
+  name       String
+  createdAt  DateTime   @default(now())
+  members    Member[]
+  accounts   CustomerAccount[]
+  users      ProductUser[]
+  events     Event[]
+  charts     Chart[]
+  dashboards Dashboard[]
+  segments   Segment[]
+  reports    Report[]
+
+  @@map("workspaces")
+}
+
+model Member {
+  id          String    @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        Role
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@index([workspaceId])
+  @@map("members")
+}
+
+enum Role {
+  owner
+  admin
+  viewer
+}
+
+// B2B customer accounts
+model CustomerAccount {
+  id          String    @id @default(cuid())
+  workspaceId String
+  externalId  String?   @db.VarChar(191)
+  name        String
+  plan        Plan      @default(free)
+  country     String?   @db.VarChar(2)
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  users       ProductUser[]
+  events      Event[]
+
+  @@index([workspaceId])
+  @@index([plan])
+  @@index([country])
+  @@map("accounts")
+}
+
+enum Plan {
+  free
+  pro
+  enterprise
+}
+
+// End-users of customer accounts
+model ProductUser {
+  id            String          @id @default(cuid())
+  workspaceId   String
+  accountId     String?
+  externalId    String?         @db.VarChar(191)
+  email         String?
+  name          String?
+  createdAt     DateTime        @default(now())
+  workspace     Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  account       CustomerAccount? @relation(fields: [accountId], references: [id])
+  events        Event[]
+
+  @@index([workspaceId])
+  @@index([accountId])
+  @@map("users")
+}
+
+model Event {
+  id           String          @id @default(cuid())
+  workspaceId  String
+  accountId    String?
+  productUserId String?
+  name         String
+  ts           DateTime        @db.Timestamptz(6)
+  props        Json
+  workspace    Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  account      CustomerAccount? @relation(fields: [accountId], references: [id])
+  productUser  ProductUser?     @relation(fields: [productUserId], references: [id])
+
+  @@index([workspaceId, ts])
+  @@index([name])
+  @@index([accountId])
+  @@index([productUserId])
+  @@map("events")
+}
+
+model Chart {
+  id           String     @id @default(cuid())
+  workspaceId  String
+  name         String
+  query        Json
+  viz          String     // e.g., line, bar, area, pie
+  createdAt    DateTime   @default(now())
+  workspace    Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  dashboardItems DashboardChart[]
+
+  @@index([workspaceId])
+  @@map("charts")
+}
+
+model Dashboard {
+  id           String           @id @default(cuid())
+  workspaceId  String
+  name         String
+  createdAt    DateTime         @default(now())
+  workspace    Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  items        DashboardChart[]
+  reports      Report[]
+
+  @@index([workspaceId])
+  @@map("dashboards")
+}
+
+model DashboardChart {
+  id           String    @id @default(cuid())
+  dashboardId  String
+  chartId      String
+  position     Int       @default(0)
+  dashboard    Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+  chart        Chart     @relation(fields: [chartId], references: [id], onDelete: Cascade)
+
+  @@unique([dashboardId, chartId])
+  @@map("dashboard_charts")
+}
+
+model Segment {
+  id           String     @id @default(cuid())
+  workspaceId  String
+  name         String
+  rules        Json       // JSON rule set
+  createdAt    DateTime   @default(now())
+  workspace    Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@map("segments")
+}
+
+model Report {
+  id           String     @id @default(cuid())
+  workspaceId  String
+  name         String
+  dashboardId  String
+  cron         String
+  recipients   String[]
+  createdAt    DateTime   @default(now())
+  workspace    Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  dashboard    Dashboard  @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+  runs         ReportRun[]
+
+  @@index([workspaceId])
+  @@map("reports")
+}
+
+model ReportRun {
+  id          String   @id @default(cuid())
+  reportId    String
+  status      String   // pending, success, failed
+  runAt       DateTime @default(now())
+  pdfUrl      String?
+  error       String?
+  report      Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
+  @@map("report_runs")
+}
+
+// Suggested indexes
+// JSONB GIN index on events.props
+// Prisma does not support GIN index via DSL yet; apply via migration SQL.

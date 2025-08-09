@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "SaaS Analytics Dashboard",
+  description: "Real-time analytics platform for B2B SaaS",
+};
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
