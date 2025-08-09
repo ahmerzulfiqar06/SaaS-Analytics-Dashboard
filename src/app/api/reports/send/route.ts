@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import puppeteer from "puppeteer";
 import { Resend } from "resend";
+import { Buffer } from "buffer";
 
 const Body = z.object({ reportId: z.string() });
 
@@ -32,7 +33,12 @@ export async function POST(req: NextRequest) {
       to: report.recipients,
       subject: `Report: ${report.name}`,
       html: `<p>Attached is your scheduled report.</p>`,
-      attachments: [{ filename: `report-${report.id}.pdf`, content: pdf.toString("base64"), path: undefined } as any],
+      attachments: [
+        {
+          filename: `report-${report.id}.pdf`,
+          content: Buffer.from(pdf).toString("base64"),
+        },
+      ],
     });
 
     await prisma.reportRun.update({ where: { id: run.id }, data: { status: "success" } });
