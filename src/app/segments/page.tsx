@@ -48,7 +48,7 @@ export default function SegmentsPage() {
           <div key={i} className="flex gap-2 items-center">
             <select className="bg-transparent border border-gray-700 rounded px-2 py-1" value={r.field} onChange={(e) => updateRule(i, { field: e.target.value })}>
               <option value="plan">Account plan</option>
-              <option value="feature_x_used_last7">feature_x_used last 7 days >=</option>
+              <option value="feature_x_used_last7">feature_x_used last 7 days &gt;=</option>
             </select>
             <select className="bg-transparent border border-gray-700 rounded px-2 py-1" value={r.op} onChange={(e) => updateRule(i, { op: e.target.value })}>
               <option value="=">=</option>
