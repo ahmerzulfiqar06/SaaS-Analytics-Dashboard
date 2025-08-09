@@ -5,7 +5,7 @@ import { seedDatabase } from "@/lib/seed";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function POST(): Promise<Response> {
+export async function GET(): Promise<Response> {
   try {
     if (!process.env.DATABASE_URL) {
       return NextResponse.json(

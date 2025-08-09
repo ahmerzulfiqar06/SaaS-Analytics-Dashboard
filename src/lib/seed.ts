@@ -20,6 +20,14 @@ export async function seedDatabase(prisma: PrismaClient): Promise<void> {
   });
 
   const plans = [Plan.free, Plan.pro, Plan.enterprise] as const;
+  // If accounts already exist for this workspace, assume seed already ran
+  const alreadySeeded = await prisma.customerAccount.findFirst({
+    where: { workspaceId: workspace.id },
+    select: { id: true },
+  });
+  if (alreadySeeded) {
+    return;
+  }
   const accounts = await Promise.all(
     Array.from({ length: 5 }).map((_, i) =>
       prisma.customerAccount.create({
