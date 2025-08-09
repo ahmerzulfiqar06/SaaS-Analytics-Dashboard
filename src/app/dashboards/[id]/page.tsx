@@ -19,11 +19,20 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
 
   async function addChart(chartId: string) {
     setAdding(true);
-    await fetch(`/api/dashboards/${params.id}/charts`, {
-      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ chartId })
-    });
-    setAdding(false);
-    location.reload();
+    try {
+      const res = await fetch(`/api/dashboards/${params.id}/charts`, {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ chartId })
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        alert(`Add chart failed: ${j?.error ?? res.status}`);
+      } else {
+        const updated = await fetch(`/api/dashboards?id=${params.id}`).then(r => r.json());
+        setDashboard(updated);
+      }
+    } finally {
+      setAdding(false);
+    }
   }
 
   if (!dashboard) return <div className="p-6">Loading...</div>;
