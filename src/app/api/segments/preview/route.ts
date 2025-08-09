@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       LIMIT ${body.limit}
     `;
 
-    const rows = await prisma.$queryRawUnsafe<any[]>(sql, ...params);
+    const rows: any[] = await prisma.$queryRawUnsafe(sql, ...params);
     return NextResponse.json({ rows });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 400 });
