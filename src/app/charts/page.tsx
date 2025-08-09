@@ -16,9 +16,11 @@ export default async function ChartsPage() {
       <ul className="space-y-3">
         {Array.isArray(charts) && charts.length > 0 ? (
           charts.map((c: any) => (
-            <li key={c.id} className="p-4 rounded border border-gray-700">
-              <div className="font-medium">{c.name}</div>
-              <div className="text-xs text-gray-400">viz: {c.viz}</div>
+            <li key={c.id}>
+              <Link href={`/charts/${c.id}`} className="block p-4 rounded border border-gray-700 hover:border-gray-500">
+                <div className="font-medium">{c.name}</div>
+                <div className="text-xs text-gray-400">viz: {c.viz}</div>
+              </Link>
             </li>
           ))
         ) : (
