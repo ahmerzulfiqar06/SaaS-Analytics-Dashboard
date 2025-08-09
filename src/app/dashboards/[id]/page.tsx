@@ -7,11 +7,13 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
   const [dashboard, setDashboard] = useState<any>(null);
   const [charts, setCharts] = useState<any[]>([]);
   const [adding, setAdding] = useState(false);
+  const [dragItems, setDragItems] = useState<any[]>([]);
 
   useEffect(() => {
     (async () => {
       const d = await fetch(`/api/dashboards?id=${params.id}`).then(r => r.json());
       setDashboard(d);
+      setDragItems((d?.items || []).slice().sort((a: any, b: any) => a.position - b.position));
       const c = await fetch(`/api/charts?workspaceId=demo`).then(r => r.json());
       setCharts(c);
     })();
@@ -29,10 +31,37 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
       } else {
         const updated = await fetch(`/api/dashboards?id=${params.id}`).then(r => r.json());
         setDashboard(updated);
+        setDragItems((updated?.items || []).slice().sort((a: any, b: any) => a.position - b.position));
       }
     } finally {
       setAdding(false);
     }
+  }
+
+  function onDragStart(e: React.DragEvent<HTMLDivElement>, id: string) {
+    e.dataTransfer.setData('text/plain', id);
+  }
+
+  function onDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+  }
+
+  async function onDrop(e: React.DragEvent<HTMLDivElement>, targetId: string) {
+    e.preventDefault();
+    const sourceId = e.dataTransfer.getData('text/plain');
+    if (!sourceId || sourceId === targetId) return;
+    const items = dragItems.slice();
+    const from = items.findIndex((it) => it.id === sourceId);
+    const to = items.findIndex((it) => it.id === targetId);
+    if (from < 0 || to < 0) return;
+    const [moved] = items.splice(from, 1);
+    items.splice(to, 0, moved);
+    // Reindex positions starting at 0
+    const payload = items.map((it, idx) => ({ id: it.id, position: idx }));
+    setDragItems(items);
+    await fetch(`/api/dashboards/${params.id}/charts`, {
+      method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ items: payload }),
+    });
   }
 
   if (!dashboard) return <div className="p-6">Loading...</div>;
@@ -41,8 +70,15 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
     <div className="p-6 space-y-4">
       <h1 className="text-2xl font-semibold">{dashboard?.name ?? 'Dashboard'}</h1>
       <div className="flex flex-wrap gap-4">
-        {dashboard?.items?.length ? dashboard.items.map((it: any) => (
-          <DashboardChart key={it.id} id={it.chartId} />
+        {dragItems?.length ? dragItems.map((it: any) => (
+          <div key={it.id}
+               draggable
+               onDragStart={(e) => onDragStart(e, it.id)}
+               onDragOver={onDragOver}
+               onDrop={(e) => onDrop(e, it.id)}
+               className="cursor-move">
+            <DashboardChart id={it.chartId} />
+          </div>
         )) : <p className="text-gray-400">No charts yet.</p>}
       </div>
       <div className="space-y-2">
