@@ -9,7 +9,7 @@ const EventSchema = z.object({
   userId: z.string().optional(),
   name: z.string().min(1),
   ts: z.coerce.date(),
-  props: z.record(z.any()).default({}),
+  props: z.record(z.string(), z.any()).default({}),
 });
 
 export async function POST(req: NextRequest) {
