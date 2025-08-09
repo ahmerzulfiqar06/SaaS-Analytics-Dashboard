@@ -14,10 +14,26 @@ export default function NewChartPage() {
     interval: "day",
   });
   const [data, setData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function run() {
-    const res = await fetch("/api/query", { method: "POST", body: JSON.stringify(query) });
-    setData(await res.json());
+    setError(null);
+    setData(null);
+    try {
+      const res = await fetch("/api/query", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(query),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setError(json?.error ?? "Failed to run query");
+        return;
+      }
+      setData(json);
+    } catch (e: any) {
+      setError(e.message ?? "Network error");
+    }
   }
 
   return (
@@ -26,7 +42,8 @@ export default function NewChartPage() {
       <div className="flex gap-2">
         <button className="px-3 py-2 rounded bg-black text-white" onClick={run}>Run</button>
       </div>
-      {data && <LineChart series={data.series} />}
+      {error && <p className="text-red-500">{error}</p>}
+      {data?.series && Array.isArray(data.series) && <LineChart series={data.series} />}
     </div>
   );
 }
