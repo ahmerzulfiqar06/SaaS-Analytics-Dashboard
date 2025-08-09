@@ -1,16 +1,21 @@
 "use client";
-import useSWR from "swr";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const LineChart = dynamic(() => import("@/components/LineChart"), { ssr: false });
-
-const fetcher = (url: string) => fetch(url).then(r => r.json());
-
 export default function DashboardPage({ params }: { params: { id: string } }) {
-  const { data: dashboard } = useSWR(`/api/dashboards?id=${params.id}`, fetcher);
-  const { data: charts } = useSWR(`/api/charts?workspaceId=demo`, fetcher);
+  const [dashboard, setDashboard] = useState<any>(null);
+  const [charts, setCharts] = useState<any[]>([]);
   const [adding, setAdding] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const d = await fetch(`/api/dashboards?id=${params.id}`).then(r => r.json());
+      setDashboard(d);
+      const c = await fetch(`/api/charts?workspaceId=demo`).then(r => r.json());
+      setCharts(c);
+    })();
+  }, [params.id]);
 
   async function addChart(chartId: string) {
     setAdding(true);
@@ -46,10 +51,18 @@ export default function DashboardPage({ params }: { params: { id: string } }) {
 }
 
 function DashboardChart({ id }: { id: string }) {
-  const { data: chart } = useSWR(`/api/charts/${id}`, fetcher);
-  const { data } = useSWR(() => chart?.query ? ['/api/query', chart.query] : null, {
-    fetcher: (_key: string, body: any) => fetch('/api/query', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json())
-  } as any);
+  const [chart, setChart] = useState<any>(null);
+  const [data, setData] = useState<any>(null);
+  useEffect(() => {
+    (async () => {
+      const c = await fetch(`/api/charts/${id}`).then(r => r.json());
+      setChart(c);
+      if (c?.query) {
+        const q = await fetch('/api/query', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(c.query) }).then(r => r.json());
+        setData(q);
+      }
+    })();
+  }, [id]);
   if (!data?.series) return <div className="w-[400px] h-[240px] border border-gray-800 rounded" />;
   return (
     <div className="w-[400px] h-[240px] border border-gray-800 rounded p-2">
