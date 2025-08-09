@@ -103,7 +103,7 @@ export async function runQuery(input: QueryInput) {
     ORDER BY 1 ASC
   `;
 
-  const rows = await prisma.$queryRawUnsafe<any[]>(sql, ...params);
+  const rows: any[] = await prisma.$queryRawUnsafe(sql, ...params);
 
   const series: SeriesPoint[] = rows.map((r) => ({
     t: new Date(r.bucket).toISOString(),
