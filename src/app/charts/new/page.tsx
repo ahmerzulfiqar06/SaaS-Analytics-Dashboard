@@ -59,6 +59,7 @@ export default function NewChartPage() {
         return;
       }
       alert("Saved! Open /charts to see it in the list.");
+      // Optionally navigate or revalidate — keeping it simple for now
     } finally {
       setIsSaving(false);
     }
