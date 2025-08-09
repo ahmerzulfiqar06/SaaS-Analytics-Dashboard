@@ -1,5 +1,5 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import NextAuth, { NextAuthOptions, Session } from "next-auth";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { NextAuthOptions, Session } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
 import { prisma } from "@/lib/prisma";
 
@@ -25,8 +25,7 @@ export const authOptions: NextAuthOptions = {
   },
 };
 
-export const { handlers: authHandlers, auth, signIn, signOut } = NextAuth(
-  authOptions,
-);
+// In App Router, the NextAuth request handler is created in the API route file.
+// We export only authOptions here.
 
 

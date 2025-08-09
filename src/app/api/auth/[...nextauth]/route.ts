@@ -1,5 +1,8 @@
-import { authHandlers } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-export const { GET, POST } = authHandlers;
+// Export route handlers for App Router
+const handler = NextAuth(authOptions);
+export const { GET, POST } = handler;
 
 
